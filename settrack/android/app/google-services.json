@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "959091538131",
+    "project_id": "settrack-app-2026",
+    "storage_bucket": "settrack-app-2026.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:959091538131:android:9e9c712ae5e64a32aabc26",
+        "android_client_info": {
+          "package_name": "com.example.settrack"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBDnZWvDV0P0JzPyAqxPzmwwqDlqa7jdAc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
