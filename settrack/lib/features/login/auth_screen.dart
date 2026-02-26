@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -10,33 +11,46 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
 
   Future<void> _register() async {
-    try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+  try {
+    final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Account created successfully")),
-      );
+    final user = cred.user;
+    if (user == null) return;
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
+    final username = _nameController.text.trim();
 
-    } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message ?? "Error")),
-      );
-    }
+    // ✅ update displayName ด้วย (สำคัญ)
+    await user.updateDisplayName(username);
+
+    // ✅ save firestore
+    await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+      'name': username,
+      'email': user.email,
+      'photoUrl': null,
+      'createdAt': Timestamp.now(),
+    });
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Account created successfully")),
+    );
+
+    // ❗ ไม่ต้องไป login screen
+    Navigator.pop(context); // หรือไม่ต้องทำอะไรเลย
+  } on FirebaseAuthException catch (e) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(e.message ?? "Error")));
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -47,12 +61,13 @@ class _AuthScreenState extends State<AuthScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 28),
           child: Column(
             children: [
-
               const SizedBox(height: 80),
 
-              const Icon(Icons.fitness_center,
-                  color: Colors.greenAccent,
-                  size: 60),
+              const Icon(
+                Icons.fitness_center,
+                color: Colors.greenAccent,
+                size: 60,
+              ),
 
               const SizedBox(height: 20),
 
@@ -116,8 +131,11 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  Widget _buildInput(TextEditingController controller, String hint,
-      [bool obscure = false]) {
+  Widget _buildInput(
+    TextEditingController controller,
+    String hint, [
+    bool obscure = false,
+  ]) {
     return TextField(
       controller: controller,
       obscureText: obscure,

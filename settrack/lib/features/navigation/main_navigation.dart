@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import '../workout/home_screen.dart';
 import '../workout/workout_screen.dart';
+import '../workout/profile_screen.dart';
+import '../progress/progress_screen.dart';
+
+/// 🔥 GLOBAL KEY (ต้องมีอันเดียวทั้งแอพ)
+final GlobalKey<_MainNavigationState> mainNavKey =
+    GlobalKey<_MainNavigationState>();
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -12,11 +18,18 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
 
+  /// 🔥 ให้หน้าอื่นสั่งเปลี่ยน tab
+  void switchToTab(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   final List<Widget> _pages = const [
     HomeScreen(),
     WorkoutScreen(),
-    Center(child: Text("Progress", style: TextStyle(color: Colors.white))),
-    Center(child: Text("Profile", style: TextStyle(color: Colors.white))),
+    ProgressScreen(),
+    ProfileScreen(),
   ];
 
   @override
@@ -30,20 +43,18 @@ class _MainNavigationState extends State<MainNavigation> {
         unselectedItemColor: Colors.white54,
         currentIndex: _selectedIndex,
         type: BottomNavigationBarType.fixed,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+        onTap: switchToTab,
         items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(
-              icon: Icon(Icons.home), label: "Home"),
+            icon: Icon(Icons.fitness_center),
+            label: "Workout",
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.fitness_center), label: "Workout"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.show_chart), label: "Progress"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person), label: "Profile"),
+            icon: Icon(Icons.show_chart),
+            label: "Progress",
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),
     );

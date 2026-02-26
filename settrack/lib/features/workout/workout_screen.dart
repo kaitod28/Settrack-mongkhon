@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:settrack/features/workout/add_exercise_screen.dart';
-
-
+import 'package:settrack/features/workout/log_workout_screen.dart';
 
 class WorkoutScreen extends StatelessWidget {
   const WorkoutScreen({super.key});
@@ -20,7 +19,6 @@ class WorkoutScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               const SizedBox(height: 20),
 
               const Text(
@@ -35,45 +33,51 @@ class WorkoutScreen extends StatelessWidget {
               const SizedBox(height: 25),
 
               /// 🔥 Start Workout Button
-             GestureDetector(
-              onTap: () {
-               Navigator.push(
-                 context,
-                 MaterialPageRoute(
-                  builder: (_) => const AddExerciseScreen(),
-                  ),
-              );
-            },
-            child: Container(
-             width: double.infinity,
-             height: 55,
-             decoration: BoxDecoration(
-               color: Colors.greenAccent,
-               borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Center(
-             child: Text(
-               "▶ Start Workout",
-               style: TextStyle(
-                 fontWeight: FontWeight.bold,
-                 color: Colors.black,
-              ),
-            ),
-          ),
-        ),
-      ),
-              const SizedBox(height: 30),
+              GestureDetector(
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AddExerciseScreen(),
+                    ),
+                  );
 
-              const Text(
-                "My Routines",
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  // ถ้า user กดกลับเฉย ๆ
+                  if (result == null) return;
+
+                  final exercises = List<Map<String, dynamic>>.from(result);
+                  if (exercises.isEmpty) return;
+
+                  // 👉 ไปหน้า LogWorkout พร้อมท่าที่เลือก
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          LogWorkoutScreen(selectedExercises: exercises),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 55,
+                  decoration: BoxDecoration(
+                    color: Colors.greenAccent,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      " Start Workout",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
                 ),
               ),
+              const SizedBox(height: 30),
 
-              const SizedBox(height: 20),
+          
 
               /// 🔥 Routine List (Realtime)
               Expanded(
@@ -84,44 +88,34 @@ class WorkoutScreen extends StatelessWidget {
                       .collection("routines")
                       .snapshots(),
                   builder: (context, snapshot) {
-
                     if (!snapshot.hasData) {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
+                      return const Center(child: CircularProgressIndicator());
                     }
 
                     final routines = snapshot.data!.docs;
 
-                    if (routines.isEmpty) {
-                      return const Text(
-                        "No routines yet",
-                        style: TextStyle(color: Colors.white54),
-                      );
-                    }
+                  
 
                     return ListView.builder(
                       itemCount: routines.length,
                       itemBuilder: (context, index) {
-
-                        final data = routines[index].data()
-                            as Map<String, dynamic>;
+                        final data =
+                            routines[index].data() as Map<String, dynamic>;
 
                         return _RoutineCard(
                           title: data["title"] ?? "Routine",
                           exercises: data["exercises"] ?? 0,
                           onTap: () async {
-
                             /// 🔥 Create workout when routine tapped
                             await FirebaseFirestore.instance
                                 .collection("users")
                                 .doc(user.uid)
                                 .collection("workouts")
                                 .add({
-                              "title": data["title"],
-                              "totalWeight": 0,
-                              "createdAt": Timestamp.now(),
-                            });
+                                  "title": data["title"],
+                                  "totalWeight": 0,
+                                  "createdAt": Timestamp.now(),
+                                });
                           },
                         );
                       },
@@ -162,7 +156,6 @@ class _RoutineCard extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -176,14 +169,12 @@ class _RoutineCard extends StatelessWidget {
                 const SizedBox(height: 5),
                 Text(
                   "$exercises exercises",
-                  style: const TextStyle(
-                    color: Colors.white54,
-                  ),
+                  style: const TextStyle(color: Colors.white54),
                 ),
               ],
             ),
 
-            const Icon(Icons.chevron_right, color: Colors.white54)
+            const Icon(Icons.chevron_right, color: Colors.white54),
           ],
         ),
       ),

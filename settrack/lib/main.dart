@@ -6,13 +6,16 @@ import 'features/login/login_screen.dart';
 import 'features/workout/home_screen.dart';
 import 'features/navigation/main_navigation.dart';
 import 'features/progress/progress_screen.dart';
-
+import 'package:settrack/features/workout/add_exercise_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform,
+  );
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
   );
   runApp(const MyApp());
 }
@@ -22,11 +25,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return  MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: AuthGate(),
+      home: const AuthGate(),
       routes: {
-        "/progress": (context) =>  ProgressScreen(),
+        "/progress": (context) => ProgressScreen(),
+        "/addExercise": (context) => AddExerciseScreen(),
       },
     );
   }
@@ -40,7 +44,6 @@ class AuthGate extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
@@ -50,7 +53,6 @@ class AuthGate extends StatelessWidget {
         if (snapshot.hasData) {
           return const MainNavigation();
         }
-
         return const LoginScreen();
       },
     );

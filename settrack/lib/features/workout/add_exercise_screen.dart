@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'log_workout_screen.dart';
 
 class AddExerciseScreen extends StatefulWidget {
   const AddExerciseScreen({super.key});
@@ -30,12 +29,15 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF061A14),
         elevation: 0,
-        title: const Text("Add Exercise"),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          "Add Exercise",
+          style: TextStyle(color: Colors.white),
+        ),
       ),
       body: Column(
         children: [
-
-          /// 🔍 Search
+          /// 🔍 SEARCH
           Padding(
             padding: const EdgeInsets.all(16),
             child: TextField(
@@ -50,8 +52,7 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                 hintStyle: const TextStyle(color: Colors.white54),
                 filled: true,
                 fillColor: const Color(0xFF0D2A22),
-                prefixIcon:
-                    const Icon(Icons.search, color: Colors.white54),
+                prefixIcon: const Icon(Icons.search, color: Colors.white54),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: BorderSide.none,
@@ -60,7 +61,7 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
             ),
           ),
 
-          /// 🟢 Muscle Filter
+          /// 🟢 FILTER
           SizedBox(
             height: 45,
             child: ListView.builder(
@@ -77,24 +78,19 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                     });
                   },
                   child: Container(
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 8),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 18),
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? Colors.greenAccent
                           : const Color(0xFF0D2A22),
-                      borderRadius:
-                          BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                     child: Center(
                       child: Text(
                         muscle,
                         style: TextStyle(
-                          color: isSelected
-                              ? Colors.black
-                              : Colors.white,
+                          color: isSelected ? Colors.black : Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -107,7 +103,7 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
 
           const SizedBox(height: 20),
 
-          /// 📋 Exercise List
+          /// 📋 LIST
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
@@ -115,30 +111,23 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
-                  return const Center(
-                      child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator());
                 }
 
                 final docs = snapshot.data!.docs;
 
                 final filtered = docs.where((doc) {
-                  final data =
-                      doc.data() as Map<String, dynamic>;
+                  final data = doc.data() as Map<String, dynamic>;
 
-                  final name =
-                      (data["name"] ?? "")
-                          .toString()
-                          .toLowerCase();
+                  final name = (data["name"] ?? "").toString().toLowerCase();
 
-                  final muscle =
-                      data["primaryMuscle"] ?? "";
+                  final muscle = data["primaryMuscle"] ?? "";
 
-                  final matchSearch =
-                      name.contains(searchText);
+                  final matchSearch = name.contains(searchText);
 
                   final matchMuscle =
                       selectedMuscle == "All" ||
-                          muscle.contains(selectedMuscle);
+                      muscle.contains(selectedMuscle);
 
                   return matchSearch && matchMuscle;
                 }).toList();
@@ -146,75 +135,52 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                 return ListView.builder(
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
-                    final data =
-                        filtered[index].data()
-                            as Map<String, dynamic>;
+                    final data = filtered[index].data() as Map<String, dynamic>;
                     final id = filtered[index].id;
 
-                    final isSelected =
-                        selectedExercises.any(
-                            (element) =>
-                                element["id"] == id);
+                    final isSelected = selectedExercises.any(
+                      (e) => e["id"] == id,
+                    );
 
                     return ListTile(
                       leading: ClipRRect(
-                        borderRadius:
-                            BorderRadius.circular(30),
+                        borderRadius: BorderRadius.circular(30),
                         child: Image.network(
                           data["imageUrl"] ?? "",
                           width: 56,
                           height: 56,
                           fit: BoxFit.cover,
-                          errorBuilder:
-                              (context, error,
-                                  stackTrace) {
-                            return Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[800],
-                                borderRadius:
-                                    BorderRadius.circular(
-                                        30),
-                              ),
-                              child: const Icon(
-                                  Icons.fitness_center,
-                                  color: Colors.white),
-                            );
-                          },
+                          errorBuilder: (_, __, ___) => const Icon(
+                            Icons.fitness_center,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                       title: Text(
                         data["name"] ?? "",
-                        style: const TextStyle(
-                            color: Colors.white),
+                        style: const TextStyle(color: Colors.white),
                       ),
                       subtitle: Text(
                         data["primaryMuscle"] ?? "",
-                        style: const TextStyle(
-                            color: Colors.white54),
+                        style: const TextStyle(color: Colors.white54),
                       ),
                       trailing: isSelected
                           ? const Icon(
                               Icons.check_circle,
-                              color:
-                                  Colors.greenAccent)
+                              color: Colors.greenAccent,
+                            )
                           : const Icon(
                               Icons.circle_outlined,
-                              color:
-                                  Colors.white38),
+                              color: Colors.white38,
+                            ),
+
+                      /// ✅ toggle only
                       onTap: () {
                         setState(() {
                           if (isSelected) {
-                            selectedExercises.removeWhere(
-                                (element) =>
-                                    element["id"] ==
-                                    id);
+                            selectedExercises.removeWhere((e) => e["id"] == id);
                           } else {
-                            selectedExercises.add({
-                              "id": id,
-                              ...data,
-                            });
+                            selectedExercises.add({"id": id, ...data});
                           }
                         });
                       },
@@ -225,42 +191,29 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
             ),
           ),
 
-          /// 🔥 Bottom Button
+          /// 🔥 ADD BUTTON
           if (selectedExercises.isNotEmpty)
-            Container(
-              padding:
-                  const EdgeInsets.all(16),
-              width: double.infinity,
-              child: ElevatedButton(
-                style:
-                    ElevatedButton.styleFrom(
-                  backgroundColor:
-                      Colors.greenAccent,
-                  padding:
-                      const EdgeInsets.symmetric(
-                          vertical: 16),
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          LogWorkoutScreen(
-                        selectedExercises:
-                            selectedExercises,
-                      ),
-                    ),
-                  );
-                },
-                child: Text(
-                  "Add ${selectedExercises.length} exercises",
-                  style: const TextStyle(
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.greenAccent,
+                    minimumSize: const Size(double.infinity, 56),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context, selectedExercises);
+                  },
+                  child: Text(
+                    "Add ${selectedExercises.length} exercises",
+                    style: const TextStyle(
                       color: Colors.black,
-                      fontWeight:
-                          FontWeight.bold),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
-            )
+            ),
         ],
       ),
     );
