@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SetTrack – Track Your Strength Progress</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-deep: #061A14;
+    --bg-card: #0D2A22;
+    --bg-card2: #112E25;
+    --green-accent: #00E5A0;
+    --green-mid: #1DB87A;
+    --green-muted: #1A4D36;
+    --text-primary: #F0FFF8;
+    --text-secondary: #8ABFA3;
+    --text-muted: #4D8A6E;
+    --border: rgba(0, 229, 160, 0.15);
+    --border-hover: rgba(0, 229, 160, 0.35);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg-deep);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(6, 26, 20, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 20px; font-weight: 700; color: var(--text-primary); text-decoration: none;
+  }
+  .nav-logo-icon {
+    width: 32px; height: 32px;
+    background: var(--green-accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav-logo-icon svg { width: 18px; height: 18px; }
+  .nav-links {
+    display: flex; align-items: center; gap: 8px;
+    list-style: none;
+  }
+  .nav-links a {
+    color: var(--text-secondary); text-decoration: none;
+    font-size: 14px; padding: 8px 14px; border-radius: var(--radius-sm);
+    transition: color 0.2s, background 0.2s;
+  }
+  .nav-links a:hover { color: var(--text-primary); background: var(--green-muted); }
+  .nav-cta {
+    background: var(--green-accent) !important;
+    color: var(--bg-deep) !important;
+    font-weight: 600 !important;
+    padding: 9px 20px !important;
+    border-radius: var(--radius-sm) !important;
+  }
+  .nav-cta:hover { background: #00C98D !important; }
+  .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; }
+  .hamburger span { display: block; width: 22px; height: 2px; background: var(--text-primary); border-radius: 2px; transition: 0.3s; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 100px 24px 80px;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: -40%; left: 50%; transform: translateX(-50%);
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(0,229,160,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 999px; padding: 6px 16px;
+    font-size: 13px; color: var(--green-accent); margin-bottom: 28px;
+  }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green-accent); }
+  .hero h1 {
+    font-size: clamp(40px, 7vw, 76px);
+    font-weight: 800; letter-spacing: -1.5px; line-height: 1.1;
+    margin-bottom: 24px;
+  }
+  .hero h1 span { color: var(--green-accent); }
+  .hero p {
+    font-size: clamp(16px, 2.5vw, 20px);
+    color: var(--text-secondary); max-width: 520px; margin: 0 auto 40px;
+    line-height: 1.7;
+  }
+  .hero-buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--green-accent); color: var(--bg-deep);
+    font-size: 16px; font-weight: 700; text-decoration: none;
+    padding: 14px 32px; border-radius: var(--radius-sm);
+    transition: background 0.2s, transform 0.15s;
+  }
+  .btn-primary:hover { background: #00C98D; transform: translateY(-1px); }
+  .btn-primary svg { width: 18px; height: 18px; }
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: transparent; color: var(--text-primary);
+    font-size: 16px; font-weight: 600; text-decoration: none;
+    padding: 14px 32px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--border-hover); background: var(--green-muted); }
+
+  /* STATS */
+  .stats {
+    display: flex; justify-content: center; gap: 48px; flex-wrap: wrap;
+    margin-top: 64px; padding-top: 48px;
+    border-top: 1px solid var(--border);
+  }
+  .stat-item { text-align: center; }
+  .stat-num { font-size: 32px; font-weight: 800; color: var(--green-accent); }
+  .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+  /* SECTION COMMON */
+  section { padding: 96px 24px; }
+  .section-inner { max-width: 1080px; margin: 0 auto; }
+  .section-label {
+    display: inline-block;
+    font-size: 12px; font-weight: 600; letter-spacing: 1.5px;
+    color: var(--green-accent); text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 800; letter-spacing: -0.5px; line-height: 1.2;
+    margin-bottom: 16px;
+  }
+  .section-sub {
+    font-size: 17px; color: var(--text-secondary);
+    max-width: 560px; line-height: 1.7;
+  }
+
+  /* FEATURES */
+  #features { background: var(--bg-card); }
+  .features-header { text-align: center; margin-bottom: 60px; }
+  .features-header .section-sub { margin: 0 auto; }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .feature-card {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .feature-card:hover { border-color: var(--border-hover); transform: translateY(-3px); }
+  .feature-icon {
+    width: 48px; height: 48px;
+    background: var(--green-muted);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+  }
+  .feature-icon svg { width: 24px; height: 24px; stroke: var(--green-accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .feature-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+  .feature-card p { font-size: 15px; color: var(--text-secondary); line-height: 1.65; }
+  .feature-tag {
+    display: inline-block; margin-top: 16px;
+    font-size: 12px; color: var(--green-accent);
+    background: rgba(0,229,160,0.08);
+    padding: 4px 12px; border-radius: 999px;
+  }
+
+  /* HOW IT WORKS */
+  .how-layout {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+  }
+  .steps-list { display: flex; flex-direction: column; gap: 0; }
+  .step {
+    display: flex; gap: 20px;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border);
+    transition: 0.2s;
+  }
+  .step:last-child { border-bottom: none; }
+  .step:hover .step-num { background: var(--green-accent); color: var(--bg-deep); }
+  .step-num {
+    flex-shrink: 0;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--green-muted);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700; color: var(--green-accent);
+    transition: 0.2s;
+  }
+  .step-content h3 { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .step-content p { font-size: 15px; color: var(--text-secondary); line-height: 1.65; }
+  .how-visual {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px 24px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .mock-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mock-title { font-size: 16px; font-weight: 700; }
+  .mock-badge {
+    font-size: 12px; background: rgba(0,229,160,0.12);
+    color: var(--green-accent); padding: 4px 12px; border-radius: 999px;
+  }
+  .exercise-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px;
+    background: var(--bg-card2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .ex-info { display: flex; flex-direction: column; gap: 3px; }
+  .ex-name { font-size: 14px; font-weight: 600; }
+  .ex-sets { font-size: 12px; color: var(--text-muted); }
+  .ex-weight {
+    font-size: 22px; font-weight: 800; color: var(--green-accent);
+  }
+  .ex-unit { font-size: 12px; color: var(--text-muted); }
+  .progress-bar-wrap { margin-top: 4px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+  .progress-bar { height: 4px; background: var(--green-muted); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--green-accent); border-radius: 2px; }
+
+  /* CTA */
+  #cta { background: var(--bg-card); text-align: center; }
+  .cta-box {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 72px 40px;
+    position: relative; overflow: hidden;
+  }
+  .cta-box::before {
+    content: '';
+    position: absolute; bottom: -40%; left: 50%; transform: translateX(-50%);
+    width: 500px; height: 300px;
+    background: radial-gradient(circle, rgba(0,229,160,0.07) 0%, transparent 70%);
+  }
+  .cta-box h2 {
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 800; letter-spacing: -0.5px; margin-bottom: 16px;
+  }
+  .cta-box p { font-size: 17px; color: var(--text-secondary); margin-bottom: 36px; }
+
+  /* FOOTER */
+  footer {
+    background: var(--bg-deep);
+    border-top: 1px solid var(--border);
+    padding: 36px 24px;
+    text-align: center;
+  }
+  .footer-inner {
+    max-width: 1080px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+  }
+  .footer-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 16px; }
+  .footer-logo-icon {
+    width: 24px; height: 24px; background: var(--green-accent);
+    border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  }
+  .footer-logo-icon svg { width: 13px; height: 13px; }
+  footer p { font-size: 13px; color: var(--text-muted); }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .nav-links { display: none; flex-direction: column; position: absolute; top: 64px; left: 0; right: 0; background: var(--bg-deep); border-bottom: 1px solid var(--border); padding: 16px 24px; gap: 4px; }
+    .nav-links.open { display: flex; }
+    .hamburger { display: flex; }
+    .how-layout { grid-template-columns: 1fr; }
+    .how-visual { order: -1; }
+    .footer-inner { justify-content: center; text-align: center; }
+    .stats { gap: 32px; }
+    .cta-box { padding: 48px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-icon">
+      <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="7" width="16" height="4" rx="2" fill="#061A14"/>
+        <rect x="6" y="3" width="2" height="12" rx="1" fill="#061A14"/>
+        <rect x="10" y="3" width="2" height="12" rx="1" fill="#061A14"/>
+        <rect x="1" y="7" width="16" height="4" rx="2" stroke="#061A14" stroke-width="0.5"/>
+      </svg>
+    </div>
+    SetTrack
+  </a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="https://settrack-app-2026.web.app/" class="nav-cta">Open App</a></li>
+  </ul>
+  <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div>
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      Built for Gym Athletes
+    </div>
+    <h1>Track Your <span>Strength</span><br>Progress Smarter</h1>
+    <p>Stop relying on memory. SetTrack lets you record weights, track progress, and plan your next PR — all in one place.</p>
+    <div class="hero-buttons">
+      <a href="https://settrack-app-2026.web.app/" class="btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        Open App
+      </a>
+      <a href="#features" class="btn-secondary">See Features</a>
+    </div>
+    <div class="stats">
+      <div class="stat-item">
+        <div class="stat-num">5+</div>
+        <div class="stat-label">Core Features</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">100%</div>
+        <div class="stat-label">Free to Use</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">1-tap</div>
+        <div class="stat-label">Weight Recording</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-inner">
+    <div class="features-header">
+      <span class="section-label">Features</span>
+      <h2 class="section-title">Everything you need,<br>nothing you don't</h2>
+      <p class="section-sub">Designed for real gym sessions — fast, minimal, and built around how you actually train.</p>
+    </div>
+    <div class="features-grid">
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+        </div>
+        <h3>Weight Recording</h3>
+        <p>Log the exact weight for each set in seconds. No typing long notes — just tap, enter, and move on to your next set.</p>
+        <span class="feature-tag">Core Feature</span>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <h3>Workout History</h3>
+        <p>Every session is saved and organized. Review past workouts to know exactly what weight you used last week.</p>
+        <span class="feature-tag">Always Available</span>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <h3>Progress Summary</h3>
+        <p>See your improvement trends over time with weekly progress charts. Know when it's time to add more weight.</p>
+        <span class="feature-tag">Visual Insights</span>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        </div>
+        <h3>Exercise Selection</h3>
+        <p>Choose from a curated list of common weight training exercises with muscle group filters — no manual typing needed.</p>
+        <span class="feature-tag">Quick Setup</span>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        </div>
+        <h3>Exercise Info</h3>
+        <p>Short descriptions for each exercise help you stay confident and consistent — great for anyone building their routine.</p>
+        <span class="feature-tag">Built-in Guide</span>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </div>
+        <h3>One-Handed Friendly</h3>
+        <p>UI designed for gym environments — large touch targets, minimal steps, and fast interactions between sets.</p>
+        <span class="feature-tag">Gym-First Design</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-inner">
+    <div class="how-layout">
+      <div>
+        <span class="section-label">How It Works</span>
+        <h2 class="section-title">Simple 3-step workflow</h2>
+        <p class="section-sub" style="margin-bottom: 40px;">From opening the app to reviewing your progress — every step is designed to stay out of your way.</p>
+        <div class="steps-list">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <h3>Sign Up or Open App</h3>
+              <p>Create your free account in seconds or jump straight in. Your data is always synced and ready.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <h3>Select Exercises & Log Sets</h3>
+              <p>Pick from the exercise list, choose muscle groups, then enter weight and reps for each set as you train.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <h3>Review Progress Weekly</h3>
+              <p>Check your history and progress summary to plan smarter load increases and celebrate your gains.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="how-visual">
+          <div class="mock-header">
+            <span class="mock-title">Today's Workout</span>
+            <span class="mock-badge">In Progress</span>
+          </div>
+          <div class="exercise-row">
+            <div class="ex-info">
+              <span class="ex-name">Barbell Squat</span>
+              <span class="ex-sets">3 sets · 8 reps</span>
+            </div>
+            <div style="text-align: right;">
+              <div class="ex-weight">135</div>
+              <div class="ex-unit">kg</div>
+            </div>
+          </div>
+          <div class="exercise-row">
+            <div class="ex-info">
+              <span class="ex-name">Bench Press</span>
+              <span class="ex-sets">3 sets · 10 reps</span>
+            </div>
+            <div style="text-align: right;">
+              <div class="ex-weight">80</div>
+              <div class="ex-unit">kg</div>
+            </div>
+          </div>
+          <div class="exercise-row">
+            <div class="ex-info">
+              <span class="ex-name">Overhead Press</span>
+              <span class="ex-sets">3 sets · 8 reps</span>
+            </div>
+            <div style="text-align: right;">
+              <div class="ex-weight">60</div>
+              <div class="ex-unit">kg</div>
+            </div>
+          </div>
+          <div class="progress-bar-wrap" style="padding: 4px 0;">
+            <div class="progress-label">
+              <span>Weekly Progress</span>
+              <span style="color: var(--green-accent);">+12 kg avg</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 72%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta" style="padding: 80px 20px; background-color: #05140f; text-align: center; font-family: sans-serif;">
+  <div style="max-width: 800px; margin: 0 auto; background: #0a1a14; padding: 60px 20px; border-radius: 24px;">
+    
+    <h2 style="color: white; font-size: 42px; margin: 0 0 15px 0; font-weight: bold;">
+      Ready to train smarter?
+    </h2>
+    
+    <p style="color: #8fb3a8; font-size: 18px; margin: 0 0 40px 0;">
+      Join SetTrack today and never forget your weights again.
+    </p>
+
+    <a href="https://settrack-app-2026.web.app/" 
+       target="_blank"
+       style="
+        display: inline-flex; 
+        align-items: center; 
+        justify-content: center;
+        background-color: #00e699; 
+        color: #000000; 
+        padding: 18px 36px; 
+        border-radius: 12px; 
+        font-size: 18px; 
+        font-weight: 700; 
+        text-decoration: none; 
+        gap: 12px;
+        position: relative;
+        z-index: 999;
+        cursor: pointer;
+        border: none;
+       ">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+      Open SetTrack — It's Free
+    </a>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">
+      <div class="footer-logo-icon">
+        <svg viewBox="0 0 13 13" fill="#061A14" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0.5" y="5" width="12" height="3" rx="1.5"/>
+          <rect x="4" y="2" width="1.5" height="9" rx="0.75"/>
+          <rect x="7.5" y="2" width="1.5" height="9" rx="0.75"/>
+        </svg>
+      </div>
+      SetTrack
+    </div>
+    <p>© 2026 SetTrack · Mongkhon Chumpoothep</p>
+  </div>
+</footer>
+
+<script>
+  function toggleMenu() {
+    document.getElementById('navLinks').classList.toggle('open');
+  }
+  document.querySelectorAll('.nav-links a').forEach(function(a) {
+    a.addEventListener('click', function() {
+      document.getElementById('navLinks').classList.remove('open');
+    });
+  });
+</script>
+</body>
+</html>
